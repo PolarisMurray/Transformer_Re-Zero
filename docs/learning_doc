@@ -1,0 +1,21 @@
+4 main module
+
+1, tokenizer
+2, transformer
+3, inference engine
+4, fastapi backend
+
+
+1, tokenizer
+Making words into numbers
+"cat eat fish"
+[Token1, Token2, Token3...]
+
+This process if called encode and the reverse process is called decode
+The algorithm behind tokenizer is BPE
+The main thing it does is put some consevutive bytes into one token
+The vocabluary table of gpt2 is 50257
+
+For different languages, the token it costs is different
+The whole process is
+words -> token_id ->(embeddings) -> feature vectors
