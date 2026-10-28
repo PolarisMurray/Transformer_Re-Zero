@@ -1,10 +1,28 @@
 import torch
 import torch.nn as nn
 from torch.nn import functional as F
+## example:
+x = torch.tensor(
+    [
+        [1, 0, 0, 1, 0], #cat
+        [0, 1, 0, 1, 0], # sat
+        [0, 0, 1, 0, 1] # on
+    ]
+)
 
+# print(x.shape)
+# Batch: 第几条序列, Time: 第几个Token(how many tokens), Channel: Token的第几个特征(how many features)
 
 def average_loop(x):
-    raise NotImplementedError
+    B, T, C = x.shape
+    out = torch.zeros_like(x)
+
+    for b in range(B):
+        for t in range(T):
+            prefix = x[b, :t + 1, :] # here the shape of batch B is removed
+            avg = prefix.mean(dim=0)
+            out[b, t, :] = avg
+
 
 
 def average_matmul(x):
