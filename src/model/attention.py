@@ -22,23 +22,60 @@ def average_loop(x):
             prefix = x[b, :t + 1, :] # here the shape of batch B is removed
             avg = prefix.mean(dim=0)
             out[b, t, :] = avg
-
+    return out
 
 
 def average_matmul(x):
-    raise NotImplementedError
+    B, T, C = x.shape
+    wei = torch.tril(torch.ones(T, T))
+    Sum = wei.sum(dim=1, keepdim=True)
+    wei = wei / Sum
+    out = wei @ x
+    return out
 
 
 def average_softmax(x):
-    raise NotImplementedError
+    B, T, C = x.shape
+    scores = torch.zeros(T, T)
+    mask = torch.tril(torch.ones(T, T, dtype = bool))
+    scores = scores.masked_fill(~mask, float('-inf'))
+    wei = scores.softmax(scores, dim = 1)
+    out = wei @ x
 
 
 class Head(nn.Module):
     def __init__(self, n_embd, head_size, block_size, dropout = 0.0):
-        raise NotImplementedError
+        super().init()
+        self.key = nn.Linear(n_embd, head_size, bias = 0)
+        self.query = nn.Linear(n_embd, head_size, bias = 0)
+        self.value = nn.Linear(n_embd, head_size, bias = 0)
+
+        self.register_buffer(
+            "mask", torch.tril(torch.ones(block_size, block_size, dtype=bool))
+        )
+
+        self.dropout= nn.Dropout(dropout)
+
 
     def forward(self, x):
-        raise NotImplementedError
+        B, T, C = x.shape
+        k = self.key(x)
+        q = self.query(x)
+        v = self.value(x)
+
+        
+        scores = q @ k.transpose(-2, -1) / (k.size(-1) ** 0.5)
+
+        # masking
+        mask = self.mask[:T, :T]
+        scores = scores.masked_fill(~mask, float('-inf'))
+
+        attn = torch.softmax(scores, dim=-1)
+        attn = self.dropout(attn)
+        out = attn @ v
+
+        return out
+        
 
 
 def main():
