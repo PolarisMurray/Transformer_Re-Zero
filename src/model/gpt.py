@@ -47,7 +47,7 @@ class GPT(nn.Module):
     def __init__(self, cfg):
         raise NotImplementedError
 
-    def forward(self, idx, targets=None):
+    def forward(self, idx, targets = None):
         raise NotImplementedError
 
     @torch.no_grad()
