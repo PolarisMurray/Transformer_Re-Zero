@@ -7,7 +7,7 @@ class BigramLanguageModel(nn.Module):
     def __init__(self, vocab_size):
         raise NotImplementedError
 
-    def forward(self, idx, targets=None):
+    def forward(self, idx, targets = None):
         raise NotImplementedError
 
     @torch.no_grad()

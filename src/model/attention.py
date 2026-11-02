@@ -39,22 +39,24 @@ def average_softmax(x):
     scores = torch.zeros(T, T)
     mask = torch.tril(torch.ones(T, T, dtype = bool))
     scores = scores.masked_fill(~mask, float('-inf'))
-    wei = scores.softmax(scores, dim = 1)
+    wei = scores.softmax(dim=1)
     out = wei @ x
+    return out
 
 
 class Head(nn.Module):
     def __init__(self, n_embd, head_size, block_size, dropout = 0.0):
-        super().init()
-        self.key = nn.Linear(n_embd, head_size, bias = 0)
-        self.query = nn.Linear(n_embd, head_size, bias = 0)
-        self.value = nn.Linear(n_embd, head_size, bias = 0)
+        super().__init__()
+        self.key = nn.Linear(n_embd, head_size, bias = False)
+        self.query = nn.Linear(n_embd, head_size, bias = False)
+        self.value = nn.Linear(n_embd, head_size, bias = False)
 
         self.register_buffer(
-            "mask", torch.tril(torch.ones(block_size, block_size, dtype=bool))
+            "tril", torch.tril(torch.ones(block_size, block_size, dtype=bool))
         )
 
         self.dropout= nn.Dropout(dropout)
+        self.wei = None
 
 
     def forward(self, x):
@@ -67,10 +69,11 @@ class Head(nn.Module):
         scores = q @ k.transpose(-2, -1) / (k.size(-1) ** 0.5)
 
         # masking
-        mask = self.mask[:T, :T]
+        mask = self.tril[:T, :T]
         scores = scores.masked_fill(~mask, float('-inf'))
 
         attn = torch.softmax(scores, dim=-1)
+        self.wei = attn.detach()
         attn = self.dropout(attn)
         out = attn @ v
 

@@ -71,7 +71,32 @@ class BasicTokenizer:
         ##     f. 记下这个新 token 对应的字节 self.vocab[idx] = 左边的字节 + 右边的字节
 
         ##3，  verbose 为 True 时把每一次合并打印出来，看看它学到了什么
+        ds = list(text.encode("utf-8"))
 
+        self.merges = {}
+        self.vocab = {i: bytes([i]) for i in range(256)}
+
+        # Step 2: BPE 训练循环
+        num_merges = vocab_size - 256
+
+        for i in range(num_merges):
+            stats = get_stats(ids)
+
+            if not stats:
+                break
+
+            pair = max(stats, key=stats.get)
+            idx = 256 + i
+
+            ids = merge(ids, pair, idx)
+            self.merges[pair] = idx
+
+            self.vocab[idx] = (
+                self.vocab[pair[0]] + self.vocab[pair[1]]
+            )
+
+            if verbose:
+                print(f"Merge {i+1}: {pair} -> {idx}")
         raise NotImplementedError
 
     def decode(self, ids):

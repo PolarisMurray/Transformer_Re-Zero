@@ -21,18 +21,32 @@ class GPTConfig:
 
 class MultiHeadAttention(nn.Module):
     def __init__(self, cfg):
-        raise NotImplementedError
+        super().__init__()
+        head_size = cfg.n_embd // cfg.n_head
+        self.heads = nn.ModuleList(
+            [Head(cfg.n_embd, head_size, cfg.block_size, cfg.dropout) for _ in range(cfg.n_head)]
+        )
+        self.proj = nn.Linear(head_size * cfg.n_head, cfg.n_embd)
+        self.dropout = nn.Dropout(cfg.dropout)
 
     def forward(self, x):
-        raise NotImplementedError
+        out = torch.cat([h(x) for h in self.heads], dim = -1)
+        out = self.proj(out)
+        return self.dropout(out)
 
 
 class FeedForward(nn.Module):
     def __init__(self, cfg):
-        raise NotImplementedError
+        super().__init__()
+        self.net = nn.Sequential(
+            nn.Linear(cfg.n_embd, 4 * cfg.n_embd),
+            nn.GELU(),
+            nn.Linear(4 * cfg.n_embd, cfg.n_embd),
+            nn.Dropout(cfg.dropout),
+        )
 
     def forward(self, x):
-        raise NotImplementedError
+        return self.net(x)
 
 
 class Block(nn.Module):
